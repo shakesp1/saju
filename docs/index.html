@@ -1,0 +1,405 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가족 사주 원장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=IBM+Plex+Sans+KR:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FBF6EA;
+    --ink: #2A2016;
+    --ink-soft: #6B5D48;
+    --rule: #E3D6B8;
+    --seal: #B5451B;
+    --gold: #A9792C;
+    --card: #FFFFFF;
+    --wood: #3F7D4A;
+    --fire: #C0472B;
+    --earth: #B8862E;
+    --metal: #8A8172;
+    --water: #2F4A7A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 96px; }
+
+  header { border-bottom: 3px solid var(--ink); padding-bottom: 18px; margin-bottom: 4px; }
+  .masthead-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.14em; color: var(--seal);
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Noto Serif KR', serif; font-weight: 900; font-size: 30px;
+    margin: 0 0 6px;
+  }
+  .subhead { color: var(--ink-soft); font-size: 13.5px; }
+
+  .person-tabs {
+    display: flex; gap: 4px; margin: 22px 0 20px;
+    border-bottom: 1px solid var(--rule); overflow-x: auto;
+  }
+  .person-tab {
+    flex-shrink: 0; font-family: 'Noto Serif KR', serif; font-weight: 700;
+    font-size: 14.5px; padding: 11px 16px; background: transparent; border: none;
+    border-bottom: 3px solid transparent; color: var(--ink-soft); cursor: pointer;
+    margin-bottom: -1px;
+  }
+  .person-tab.active { color: var(--ink); border-bottom-color: var(--seal); }
+
+  .person-panel { display: none; }
+  .person-panel.active { display: block; }
+
+  .profile-card {
+    background: var(--card); border: 1px solid var(--rule); border-radius: 6px;
+    padding: 18px 20px; margin-bottom: 20px;
+  }
+  .profile-name { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 19px; margin-bottom: 4px; }
+  .profile-meta { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); }
+
+  .pillars-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px;
+  }
+  .pillar-col { text-align: center; }
+  .pillar-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .char-box {
+    border-radius: 6px; padding: 10px 4px; color: #fff; margin-bottom: 4px;
+  }
+  .char-box .hanja { font-family: 'Noto Serif KR', serif; font-size: 22px; font-weight: 700; line-height: 1; }
+  .char-box .hangul { font-size: 11px; opacity: 0.9; margin-top: 2px; }
+  .sipsin-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .no-data-box {
+    border: 1px dashed var(--rule); border-radius: 6px; padding: 18px 4px;
+    color: var(--ink-soft); font-size: 11px; margin-bottom: 4px;
+  }
+
+  .today-card {
+    background: linear-gradient(135deg, #FFF9EC, #FCF0D8);
+    border: 1px solid var(--rule); border-radius: 6px; padding: 20px;
+  }
+  .today-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em;
+    color: var(--seal); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .today-headline {
+    font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 17px; margin-bottom: 10px;
+  }
+  .today-ganzhi { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .today-ganzhi .char-box { width: 52px; margin-bottom: 0; }
+  .today-sipsin-label { font-size: 13px; color: var(--ink-soft); }
+  .reading-list { margin: 0; padding-left: 0; list-style: none; }
+  .reading-list li {
+    padding: 10px 0; border-top: 1px solid var(--rule); font-size: 14px; line-height: 1.6;
+  }
+  .reading-list li:first-child { border-top: none; }
+
+  footer {
+    margin-top: 32px; padding-top: 14px; border-top: 1px solid var(--rule);
+    font-size: 11px; color: var(--ink-soft); line-height: 1.7;
+  }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 24px; }
+    .char-box .hanja { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="masthead-label">Family Saju Ledger</div>
+    <h1>가족 사주 원장</h1>
+    <div class="subhead">만세력(연·월·일·시주)은 한 번 계산되면 고정, "오늘의 운세"는 접속할 때마다 오늘 날짜 기준으로 자동 계산됩니다.</div>
+  </header>
+
+  <nav class="person-tabs" id="personTabs"></nav>
+  <div id="panels"></div>
+
+  <footer>
+    본 페이지는 규칙 기반 명리학 계산(연월일시주, 십성)을 사용하며, 지장간·12운성·신살 등 정밀 항목은
+    이번 버전에 포함되어 있지 않습니다. 오늘의 운세 문구는 정해진 문장 풀에서 자동 선택되는
+    참고용 콘텐츠로, 실제 전문 상담을 대체하지 않습니다.
+  </footer>
+</div>
+
+<script>
+/* ===================== 기초 데이터 ===================== */
+const TG = ["갑","을","병","정","무","기","경","신","임","계"];
+const TG_HANJA = {"갑":"甲","을":"乙","병":"丙","정":"丁","무":"戊","기":"己","경":"庚","신":"辛","임":"壬","계":"癸"};
+const DZ = ["자","축","인","묘","진","사","오","미","신","유","술","해"];
+const DZ_HANJA = {"자":"子","축":"丑","인":"寅","묘":"卯","진":"辰","사":"巳","오":"午","미":"未","신":"申","유":"酉","술":"戌","해":"亥"};
+
+const STEM_INFO = {
+  "갑": {el:"목", yy:"양"}, "을": {el:"목", yy:"음"},
+  "병": {el:"화", yy:"양"}, "정": {el:"화", yy:"음"},
+  "무": {el:"토", yy:"양"}, "기": {el:"토", yy:"음"},
+  "경": {el:"금", yy:"양"}, "신": {el:"금", yy:"음"},
+  "임": {el:"수", yy:"양"}, "계": {el:"수", yy:"음"},
+};
+const BRANCH_ELEMENT = {
+  "자":"수","축":"토","인":"목","묘":"목","진":"토","사":"화",
+  "오":"화","미":"토","신":"금","유":"금","술":"토","해":"수",
+};
+const ELEMENT_COLOR = { "목":"var(--wood)", "화":"var(--fire)", "토":"var(--earth)", "금":"var(--metal)", "수":"var(--water)" };
+const GENERATES = { "목":"화","화":"토","토":"금","금":"수","수":"목" };
+const CONTROLS  = { "목":"토","토":"수","수":"화","화":"금","금":"목" };
+
+function sipsin(dayStem, targetStem) {
+  const a = STEM_INFO[dayStem], b = STEM_INFO[targetStem];
+  if (a.el === b.el) return a.yy === b.yy ? "비견" : "겁재";
+  if (GENERATES[a.el] === b.el) return a.yy === b.yy ? "식신" : "상관";
+  if (CONTROLS[a.el] === b.el) return a.yy === b.yy ? "편재" : "정재";
+  if (CONTROLS[b.el] === a.el) return a.yy === b.yy ? "편관" : "정관";
+  if (GENERATES[b.el] === a.el) return a.yy === b.yy ? "편인" : "정인";
+  return "-";
+}
+
+// 60갑자 순서 (index 0 = 갑자) — 오늘의 일주 계산용
+const JIAZI = [];
+for (let i = 0; i < 60; i++) JIAZI.push([TG[i % 10], DZ[i % 12]]);
+const DAY_OFFSET = 17; // 1970-01-01(UTC) 기준 보정값 (2024-01-01 = 갑자일로 검증됨)
+
+function todayGanzhi() {
+  // 한국시간(KST) 기준 오늘 날짜로 계산
+  const kstStr = new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
+  const kst = new Date(kstStr);
+  const daysSinceEpoch = Math.floor(Date.UTC(kst.getFullYear(), kst.getMonth(), kst.getDate()) / 86400000);
+  const idx = ((daysSinceEpoch + DAY_OFFSET) % 60 + 60) % 60;
+  return { pair: JIAZI[idx], dateStr: `${kst.getFullYear()}-${String(kst.getMonth()+1).padStart(2,'0')}-${String(kst.getDate()).padStart(2,'0')}`, idx };
+}
+
+/* ===================== 인물별 고정 사주 데이터 ===================== */
+// 연/월/일/시주는 정확한 만세력 계산(sxtwl, 절기 기준)으로 미리 산출되어 고정된 값입니다.
+const PEOPLE = [
+  {
+    id: "jaegyun", name: "정재균",
+    birthInfo: "1983년 음력 2월 6일 00:30 출생 (양력 1983-03-20)",
+    pillars: { year:["계","해"], month:["을","묘"], day:["정","미"], hour:["경","자"] },
+  },
+  {
+    id: "gyeongbin", name: "정경빈",
+    birthInfo: "1984년 양력 12월 30일 07:00 출생",
+    pillars: { year:["갑","자"], month:["병","자"], day:["무","술"], hour:["병","진"] },
+  },
+  {
+    id: "doyoung", name: "정도영",
+    birthInfo: "2018년 양력 11월 2일 09:25 출생",
+    pillars: { year:["무","술"], month:["임","술"], day:["무","술"], hour:["정","사"] },
+  },
+  {
+    id: "seyoung", name: "정세영",
+    birthInfo: "2023년 양력 2월 3일 11:06 출생",
+    pillars: { year:["임","인"], month:["계","축"], day:["임","진"], hour:["병","오"] },
+  },
+];
+
+/* ===================== 오늘의 운세 문장 풀 (십성별) ===================== */
+const READING_POOL = {
+  "비견": [
+    "오늘은 스스로의 판단을 믿고 나아가도 좋은 날입니다. 남의 말에 흔들리기보다 자기 페이스를 지켜보세요.",
+    "동료나 친구와의 협력이 힘이 되는 하루. 다만 지나친 경쟁심은 스스로를 지치게 할 수 있어요.",
+    "독립적으로 처리해야 할 일이 잘 풀립니다. 혼자만의 시간을 가져도 좋은 타이밍이에요.",
+    "자존심을 지키되 고집으로 흐르지 않도록 균형을 잡아보세요.",
+    "새로운 시작을 하기에 나쁘지 않은 기운입니다. 작은 결심을 실행에 옮겨보세요.",
+  ],
+  "겁재": [
+    "재물이나 소지품 관리에 조금 더 신경 쓰면 좋은 날입니다.",
+    "가까운 사람과의 사소한 마찰에 주의하세요. 양보가 필요한 순간이 있어요.",
+    "경쟁 상황에서 승부욕이 강해지는 날. 무리한 베팅은 피하는 게 좋아요.",
+    "예상치 못한 지출이 생길 수 있으니 오늘은 큰 결정을 미뤄도 괜찮아요.",
+    "협업보다는 각자의 역할을 명확히 나누는 편이 수월한 하루입니다.",
+  ],
+  "식신": [
+    "여유롭고 편안한 기운이 감돕니다. 맛있는 음식이나 좋아하는 취미로 하루를 채워보세요.",
+    "표현력이 좋아지는 날이라 대화나 창작 활동이 잘 풀립니다.",
+    "몸과 마음의 긴장을 풀고 재충전하기 좋은 타이밍이에요.",
+    "작은 즐거움을 찾는 것이 오늘의 핵심입니다. 여유를 가져보세요.",
+    "새로운 것을 배우거나 시도하는 데 흥미가 생기는 하루예요.",
+  ],
+  "상관": [
+    "재치와 순발력이 돋보이는 날이지만, 말이 앞서지 않도록 한 번 더 생각하고 말해보세요.",
+    "틀에 얽매이지 않는 아이디어가 빛을 발할 수 있는 하루입니다.",
+    "표현하고 싶은 마음이 커지는 날. 다만 예의는 지키는 게 좋아요.",
+    "규칙보다 융통성이 필요한 상황이 생길 수 있어요.",
+    "자기주장이 강해지는 날이니, 상대의 입장도 한 번 더 헤아려보세요.",
+  ],
+  "편재": [
+    "예상치 못한 기회나 작은 행운이 찾아올 수 있는 날입니다.",
+    "활동 반경을 넓히면 좋은 결과로 이어질 수 있어요.",
+    "돈이 들어오고 나가는 흐름이 활발한 하루. 큰 그림을 보고 움직이세요.",
+    "사람을 통해 좋은 정보나 기회를 얻을 수 있는 날이에요.",
+    "융통성 있게 움직이면 뜻밖의 성과가 있을 수 있습니다.",
+  ],
+  "정재": [
+    "꾸준히 해온 노력이 결실을 맺기 좋은 날입니다.",
+    "안정적인 재물운이 따르는 하루. 계획한 대로 차근차근 진행해보세요.",
+    "성실함이 인정받는 타이밍입니다. 맡은 일에 집중해보세요.",
+    "저축이나 계획적인 소비에 좋은 기운이 있는 날이에요.",
+    "신뢰를 바탕으로 한 관계가 힘이 되어주는 하루입니다.",
+  ],
+  "편관": [
+    "긴장되는 순간이 있을 수 있지만, 그만큼 결단력이 필요한 날이에요.",
+    "도전적인 과제가 주어질 수 있습니다. 정면 돌파가 답일 때가 있어요.",
+    "책임이 무겁게 느껴질 수 있지만, 잘 헤쳐나가면 성장하는 하루가 됩니다.",
+    "예상치 못한 압박이 있을 수 있으니 무리한 일정은 피하세요.",
+    "냉정하고 신속한 판단이 필요한 순간이 올 수 있습니다.",
+  ],
+  "정관": [
+    "책임감 있게 일을 처리하면 좋은 평가를 받는 날입니다.",
+    "규율과 원칙을 지키는 것이 오늘은 특히 중요해요.",
+    "신뢰받는 위치에서 인정받을 수 있는 기운이 있습니다.",
+    "공식적인 자리나 약속에서 좋은 인상을 남길 수 있는 하루예요.",
+    "질서 있게 하루를 계획하면 순조롭게 흘러갑니다.",
+  ],
+  "편인": [
+    "직관이 발달하는 날입니다. 논리보다 느낌을 믿어보는 것도 좋아요.",
+    "혼자만의 시간에서 좋은 아이디어가 떠오를 수 있어요.",
+    "예상치 못한 곳에서 도움을 받을 수 있는 하루입니다.",
+    "새로운 분야에 대한 호기심이 커지는 날이에요.",
+    "깊이 있는 생각을 정리하기 좋은 타이밍입니다.",
+  ],
+  "정인": [
+    "배움과 관련된 일에 좋은 기운이 따르는 날입니다.",
+    "귀인의 도움이나 조언이 큰 힘이 될 수 있어요.",
+    "문서, 계약, 공부와 관련된 일이 순조로운 하루예요.",
+    "마음의 안정을 찾기 좋은 타이밍입니다.",
+    "차분히 준비해온 일이 인정받을 수 있는 날이에요.",
+  ],
+};
+
+function pickReading(sipsinType, seed) {
+  const pool = READING_POOL[sipsinType] || READING_POOL["비견"];
+  const idx = ((seed % pool.length) + pool.length) % pool.length;
+  return pool[idx];
+}
+
+function seedFromPillars(pillars) {
+  const str = pillars.year.join('') + pillars.month.join('') + pillars.day.join('');
+  let sum = 0;
+  for (const ch of str) sum += ch.charCodeAt(0);
+  return sum;
+}
+
+/* ===================== 렌더링 ===================== */
+function charBox(stem, branch, isStem) {
+  const ch = isStem ? stem : branch;
+  const hanja = isStem ? TG_HANJA[ch] : DZ_HANJA[ch];
+  const el = isStem ? STEM_INFO[ch].el : BRANCH_ELEMENT[ch];
+  return `
+    <div class="char-box" style="background:${ELEMENT_COLOR[el]}">
+      <div class="hanja">${hanja}</div>
+      <div class="hangul">${ch}(${el})</div>
+    </div>
+  `;
+}
+
+function renderPillarsGrid(person) {
+  const dayStem = person.pillars.day[0];
+  const cols = [
+    { key: "hour", label: "시주" },
+    { key: "day", label: "일주" },
+    { key: "month", label: "월주" },
+    { key: "year", label: "연주" },
+  ];
+  const html = cols.map(col => {
+    const p = person.pillars[col.key];
+    if (!p) {
+      return `
+        <div class="pillar-col">
+          <div class="pillar-label">${col.label}</div>
+          <div class="no-data-box">시간<br>미상</div>
+          <div class="no-data-box">-</div>
+        </div>
+      `;
+    }
+    const [stem, branch] = p;
+    const stemSip = col.key === "day" ? "비견" : sipsin(dayStem, stem);
+    return `
+      <div class="pillar-col">
+        <div class="pillar-label">${col.label}</div>
+        ${charBox(stem, branch, true)}
+        <div class="sipsin-tag">${stemSip}</div>
+        ${charBox(stem, branch, false)}
+      </div>
+    `;
+  }).join('');
+  return `<div class="pillars-grid">${html}</div>`;
+}
+
+function renderTodayCard(person) {
+  const { pair, dateStr } = todayGanzhi();
+  const [tStem, tBranch] = pair;
+  const dayStem = person.pillars.day[0];
+  const sip = sipsin(dayStem, tStem);
+  const seed = seedFromPillars(person.pillars) + todayGanzhi().idx;
+  const reading1 = pickReading(sip, seed);
+  const reading2 = pickReading(sip, seed + 7);
+
+  return `
+    <div class="today-card">
+      <div class="today-label">${dateStr} · Today's Fortune</div>
+      <div class="today-headline">오늘의 일진과 ${person.name}님의 기운</div>
+      <div class="today-ganzhi">
+        ${charBox(tStem, tBranch, true)}
+        <div class="today-sipsin-label">오늘은 <strong>${person.name}</strong>님에게<br><strong>${sip}</strong>의 기운이 있는 날이에요.</div>
+      </div>
+      <ul class="reading-list">
+        <li>${reading1}</li>
+        <li>${reading2}</li>
+      </ul>
+    </div>
+  `;
+}
+
+function renderPerson(person) {
+  return `
+    <div class="profile-card">
+      <div class="profile-name">${person.name}님의 사주</div>
+      <div class="profile-meta">${person.birthInfo}</div>
+    </div>
+    ${renderPillarsGrid(person)}
+    ${renderTodayCard(person)}
+  `;
+}
+
+function main() {
+  const tabsEl = document.getElementById('personTabs');
+  const panelsEl = document.getElementById('panels');
+
+  tabsEl.innerHTML = PEOPLE.map((p, i) =>
+    `<button class="person-tab ${i === 0 ? 'active' : ''}" data-id="${p.id}">${p.name}</button>`
+  ).join('');
+
+  panelsEl.innerHTML = PEOPLE.map((p, i) =>
+    `<div class="person-panel ${i === 0 ? 'active' : ''}" id="panel-${p.id}">${renderPerson(p)}</div>`
+  ).join('');
+
+  tabsEl.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('.person-tab');
+    if (!btn) return;
+    document.querySelectorAll('.person-tab').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.person-panel').forEach(p => {
+      p.classList.toggle('active', p.id === `panel-${btn.dataset.id}`);
+    });
+  });
+}
+
+main();
+</script>
+</body>
+</html>
