@@ -97,6 +97,32 @@
   .reading-list-plain li { padding: 9px 0; border-top: 1px solid var(--rule); font-size: 13.5px; line-height: 1.6; }
   .reading-list-plain li:first-child { border-top: none; }
 
+  .lotto-card {
+    background: linear-gradient(135deg, #F0FBF2, #E4F6E8);
+    border: 1px solid var(--rule); border-radius: 6px; padding: 18px 20px; margin-bottom: 22px;
+  }
+  .lotto-status {
+    font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 15px;
+    padding: 6px 12px; border-radius: 20px; display: inline-block; margin-bottom: 10px;
+  }
+  .lotto-status.good { background: var(--wood); color: #fff; }
+  .lotto-status.meh { background: var(--metal); color: #fff; }
+  .lotto-sub { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 14px; }
+  .lotto-combos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .lotto-combo { display: flex; align-items: center; gap: 10px; }
+  .lotto-combo-idx {
+    flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--ink);
+    color: var(--paper); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lotto-balls { display: flex; gap: 6px; flex-wrap: wrap; }
+  .lotto-ball {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--seal); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12.5px;
+  }
+  .lotto-caption { font-size: 12.5px; color: var(--ink-soft); line-height: 1.6; }
+
   .haeseol-title {
     background: var(--seal); color: #fff; text-align: center; font-family: 'Noto Serif KR', serif;
     font-weight: 700; font-size: 15px; padding: 9px; border-radius: 4px 4px 0 0;
@@ -169,6 +195,52 @@ const ELEMENT_COLOR = { "목":"var(--wood)", "화":"var(--fire)", "토":"var(--e
 const GENERATES = { "목":"화","화":"토","토":"금","금":"수","수":"목" };
 const CONTROLS  = { "목":"토","토":"수","수":"화","화":"금","금":"목" };
 
+// 오행별 숫자 대응 (하도낙서 기준 전통 수리)
+const ELEMENT_DIGITS = { "수":[1,6], "화":[2,7], "목":[3,8], "금":[4,9], "토":[5,10] };
+const FAVORABLE_SIPSIN = new Set(["정재", "편재", "식신"]);
+
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function lottoRecommendation(person) {
+  const dayStem = person.pillars.day[0];
+  const dayEl = STEM_INFO[dayStem].el;
+  const wealthEl = CONTROLS[dayEl]; // 일간이 극하는 오행 = 재성(財星), 전통적으로 재물을 상징
+  const digits = ELEMENT_DIGITS[wealthEl].map(d => d % 10); // 10 -> 0
+
+  const candidates = [];
+  for (let n = 1; n <= 45; n++) {
+    if (digits.includes(n % 10)) candidates.push(n);
+  }
+
+  const { pair, idx } = todayGanzhi();
+  const todayStem = pair[0];
+  const sip = sipsin(dayStem, todayStem);
+  const favorable = FAVORABLE_SIPSIN.has(sip);
+
+  const baseSeed = seedFromPillars(person.pillars) + idx * 7919;
+  const combos = [];
+  if (favorable) {
+    for (let c = 0; c < 6; c++) {
+      const rng = mulberry32(baseSeed + c * 104729);
+      const shuffled = candidates.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      combos.push(shuffled.slice(0, 6).sort((a, b) => a - b));
+    }
+  }
+
+  return { favorable, sip, wealthEl, combos };
+}
+
 function sipsin(dayStem, targetStem) {
   const a = STEM_INFO[dayStem], b = STEM_INFO[targetStem];
   if (a.el === b.el) return a.yy === b.yy ? "비견" : "겁재";
@@ -231,6 +303,7 @@ const PEOPLE = [
     id: "jaegyun", name: "정재균",
     birthInfo: "1983년 음력 2월 6일 00:30 출생 (양력 1983-03-20)",
     pillars: { year:["계","해"], month:["을","묘"], day:["정","미"], hour:["경","자"] },
+    lottoFeature: true,
   },
   {
     id: "gyeongbin", name: "정경빈",
@@ -564,6 +637,33 @@ function renderHaeseol(person) {
   `;
 }
 
+function renderLottoCard(person) {
+  const { favorable, sip, wealthEl, combos } = lottoRecommendation(person);
+  const wealthHanja = { "수":"水", "화":"火", "목":"木", "금":"金", "토":"土" }[wealthEl];
+  const statusText = favorable
+    ? "오늘은 재물운이 살아있는 날! 여러 조합 중 마음에 드는 걸로 가볍게 즐겨보세요."
+    : "오늘은 재물의 기운이 그리 강하지 않은 날이에요. 내일 다시 확인해보세요.";
+  const combosHtml = favorable
+    ? `<div class="lotto-combos">${combos.map((numbers, i) => `
+        <div class="lotto-combo">
+          <span class="lotto-combo-idx">${i + 1}</span>
+          <div class="lotto-balls">${numbers.map(n => `<span class="lotto-ball">${n}</span>`).join('')}</div>
+        </div>
+      `).join('')}</div>`
+    : '';
+
+  return `
+    <div class="lotto-card">
+      <div class="today-label">Lucky Numbers</div>
+      <div class="today-headline">오늘 로또를 사도 될까요?</div>
+      <div class="lotto-status ${favorable ? 'good' : 'meh'}">${favorable ? '🍀 사도 좋은 날' : '☁️ 오늘은 재미로만'}</div>
+      <div class="lotto-sub">오늘의 십성은 <strong>${sip}</strong>, ${person.name}님의 재성 오행은 <strong>${wealthEl}(${wealthHanja})</strong>입니다.</div>
+      ${combosHtml}
+      <div class="lotto-caption">${statusText}</div>
+    </div>
+  `;
+}
+
 function renderPerson(person) {
   return `
     <div class="profile-card">
@@ -572,6 +672,7 @@ function renderPerson(person) {
     </div>
     ${renderPillarsGrid(person)}
     ${renderTodayCard(person)}
+    ${person.lottoFeature ? renderLottoCard(person) : ''}
     ${renderHaeseol(person)}
   `;
 }
