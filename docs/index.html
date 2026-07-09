@@ -97,6 +97,25 @@
   .reading-list-plain li { padding: 9px 0; border-top: 1px solid var(--rule); font-size: 13.5px; line-height: 1.6; }
   .reading-list-plain li:first-child { border-top: none; }
 
+  .yearly-card {
+    background: linear-gradient(135deg, #FDF3EC, #FAE7D8);
+    border: 1px solid var(--rule); border-radius: 6px; padding: 18px 20px; margin-bottom: 22px;
+  }
+  .yearly-text { font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin: 4px 0 0; }
+
+  .money-badge-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin: 4px 0 14px; padding-top: 12px; border-top: 1px dashed var(--rule);
+  }
+  .money-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 20px; color: #fff; white-space: nowrap;
+  }
+  .money-badge.good { background: var(--wood); }
+  .money-badge.warn { background: var(--seal); }
+  .money-badge.meh { background: var(--metal); }
+  .money-desc { font-size: 12px; color: var(--ink-soft); }
+
   .lotto-card {
     background: linear-gradient(135deg, #F0FBF2, #E4F6E8);
     border: 1px solid var(--rule); border-radius: 6px; padding: 18px 20px; margin-bottom: 22px;
@@ -295,6 +314,16 @@ function todayGanzhi() {
   return { pair: JIAZI[idx], dateStr: `${kst.getFullYear()}-${String(kst.getMonth()+1).padStart(2,'0')}-${String(kst.getDate()).padStart(2,'0')}`, idx };
 }
 
+// 세운(연간 간지). 1984년 = 갑자년 기준으로 검증됨 (입춘 경계는 반영하지 않은 달력 연도 기준 단순화)
+function yearGanzhi(year) {
+  const idx = (((year - 1984) % 60) + 60) % 60;
+  return JIAZI[idx];
+}
+function currentYear() {
+  const kstStr = new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
+  return new Date(kstStr).getFullYear();
+}
+
 /* ===================== 인물별 고정 사주 데이터 ===================== */
 // 연/월/일/시주는 절기 기준 정밀 만세력 계산으로 미리 산출된 고정값이며,
 // 시주는 30분 단위 정확한 시간 경계(자시 23:30~01:29 등)를 반영해 계산되었습니다.
@@ -457,6 +486,27 @@ function chartSummary(person, itemIndex) {
   return text;
 }
 
+/* ===================== 신년운세 (십성별, 세운 기준) ===================== */
+const YEARLY_READING_POOL = {
+  "비견": "올해는 스스로의 힘으로 새로운 발판을 마련하는 해가 될 수 있습니다. 남에게 의지하기보다 주체적으로 판단하고 움직일 때 좋은 결과가 따르는 흐름이에요. 다만 협업이 필요한 순간에는 고집을 조금 내려놓는 유연함도 필요합니다.",
+  "겁재": "올해는 경쟁이나 재물 관리에 특히 신경 써야 하는 해입니다. 새로운 도전 자체는 나쁘지 않지만, 무리한 투자나 성급한 동업은 신중하게 접근하는 게 좋아요. 가까운 사람과의 금전 거래도 명확히 해두는 편이 안전합니다.",
+  "식신": "올해는 여유와 결실이 함께 따라오는 해가 될 수 있습니다. 그동안 쌓아온 것들을 편안하게 누리고, 좋아하는 일에 시간을 쏟을수록 만족도가 높아지는 흐름이에요. 건강 관리에도 신경 쓰면 한 해가 더 풍성해집니다.",
+  "상관": "올해는 표현하고 싶은 것이 많아지는 해입니다. 새로운 시도나 자기 PR이 좋은 결과로 이어질 수 있는 흐름이지만, 말이나 행동이 앞서지 않도록 한 번 더 생각하는 습관이 도움이 됩니다.",
+  "편재": "올해는 활동 범위를 넓힐수록 기회가 따라오는 해가 될 수 있습니다. 예상치 못한 곳에서 좋은 인연이나 수입원이 생길 가능성이 있어요. 다만 씀씀이도 함께 커질 수 있으니 계획적인 지출이 중요합니다.",
+  "정재": "올해는 그동안의 노력이 안정적인 결실로 이어지는 해입니다. 성실하게 쌓아온 것들이 재물이나 성과로 돌아올 가능성이 높은 흐름이에요. 큰 변화보다 꾸준한 실행이 유리한 한 해가 될 수 있습니다.",
+  "편관": "올해는 크고 작은 과제나 부담이 따라올 수 있는 해입니다. 힘든 순간도 있겠지만, 정면으로 부딪혀 극복하는 과정에서 실력과 그릇이 함께 커지는 흐름이에요. 무리한 확장보다는 내실을 다지는 편이 안전합니다.",
+  "정관": "올해는 책임 있는 자리나 역할이 주어질 수 있는 해입니다. 신뢰를 바탕으로 한 관계와 성과가 특히 중요해지는 흐름이에요. 원칙을 지키며 차근차근 나아가면 좋은 평가로 이어질 가능성이 큽니다.",
+  "편인": "올해는 새로운 배움이나 예상치 못한 도움이 인생의 방향을 바꿀 수 있는 해입니다. 익숙한 길을 벗어나 낯선 분야를 탐색해볼수록 얻는 것이 많은 흐름이에요. 다만 혼자 결정하기보다 주변과 상의하는 것도 도움이 됩니다.",
+  "정인": "올해는 배움, 문서, 계약과 관련된 좋은 흐름이 따라올 수 있는 해입니다. 귀인의 도움을 받을 가능성이 높고, 마음의 안정도 함께 찾아오는 시기예요. 차분히 준비해온 일이 결실을 맺기 좋은 한 해입니다.",
+};
+
+// 금전운 3단계 판정 (오늘의 십성 기준)
+function moneyLuckTier(sip) {
+  if (sip === "정재" || sip === "편재") return { tier: "좋음", cls: "good", desc: "재물이 들고 나는 흐름이 활발한 날이에요." };
+  if (sip === "겁재" || sip === "편관") return { tier: "주의", cls: "warn", desc: "지출이나 성급한 결정은 한 번 더 생각해보세요." };
+  return { tier: "보통", cls: "meh", desc: "큰 변동 없이 무난하게 흘러가는 날이에요." };
+}
+
 /* ===================== 오늘의 운세 문장 풀 (십성별) ===================== */
 const READING_POOL = {
   "비견": [
@@ -595,6 +645,7 @@ function renderTodayCard(person) {
   const seed = seedFromPillars(person.pillars) + idx;
   const reading1 = pickReading(sip, seed);
   const reading2 = pickReading(sip, seed + 7);
+  const money = moneyLuckTier(sip);
 
   return `
     <div class="today-card">
@@ -604,10 +655,34 @@ function renderTodayCard(person) {
         <div class="char-box" style="background:${ELEMENT_COLOR[STEM_INFO[tStem].el]}"><div class="hanja">${TG_HANJA[tStem]}</div><div class="hangul">${tStem}${tBranch}</div></div>
         <div class="today-sipsin-label">오늘은 <strong>${person.name}</strong>님에게<br><strong>${sip}</strong>의 기운이 있는 날이에요.</div>
       </div>
+      <div class="money-badge-row">
+        <span class="money-badge ${money.cls}">오늘의 금전운 · ${money.tier}</span>
+        <span class="money-desc">${money.desc}</span>
+      </div>
       <ul class="reading-list-plain">
         <li>${reading1}</li>
         <li>${reading2}</li>
       </ul>
+    </div>
+  `;
+}
+
+function renderYearlyCard(person) {
+  const year = currentYear();
+  const [yStem, yBranch] = yearGanzhi(year);
+  const dayStem = person.pillars.day[0];
+  const sip = sipsin(dayStem, yStem);
+  const text = YEARLY_READING_POOL[sip] || YEARLY_READING_POOL["비견"];
+
+  return `
+    <div class="yearly-card">
+      <div class="today-label">${year}년 · New Year Fortune</div>
+      <div class="today-headline">${year}년 신년운세</div>
+      <div class="today-ganzhi">
+        <div class="char-box" style="background:${ELEMENT_COLOR[STEM_INFO[yStem].el]}"><div class="hanja">${TG_HANJA[yStem]}</div><div class="hangul">${yStem}${yBranch}</div></div>
+        <div class="today-sipsin-label">${year}년(${yStem}${yBranch})은 ${person.name}님에게<br><strong>${sip}</strong>의 해예요.</div>
+      </div>
+      <p class="yearly-text">${text}</p>
     </div>
   `;
 }
@@ -671,6 +746,7 @@ function renderPerson(person) {
       <div class="profile-meta">${person.birthInfo}</div>
     </div>
     ${renderPillarsGrid(person)}
+    ${renderYearlyCard(person)}
     ${renderTodayCard(person)}
     ${person.lottoFeature ? renderLottoCard(person) : ''}
     ${renderHaeseol(person)}
